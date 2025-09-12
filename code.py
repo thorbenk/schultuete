@@ -9,6 +9,7 @@ import adafruit_lis3dh
 from adafruit_ticks import ticks_ms, ticks_add, ticks_less
 import colorsys
 import time
+import asyncio
 
 HIT_THRESHOLD = 120
 SWING_THRESHOLD = 130
@@ -21,6 +22,12 @@ PURPLE = (125, 0, 255)
 WHITE = (255, 255, 255)
 COLORS = [RED, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE]
 BLACK = (0,0,0)
+
+MAIN_COLORS = [RED, GREEN, BLUE]
+
+SOUNDS = ["geschwister.wav", "erdnussflips.wav", "ich-heisse-mara.wav", "eltern.wav"]
+
+COLOR_MODES = ["const", "blink"]
 
 # enable external power pin
 # provides power to the external components
@@ -48,19 +55,26 @@ lis3dh.set_tap(1, HIT_THRESHOLD)
 b1pin = DigitalInOut(board.D5)
 b1pin.direction = Direction.INPUT
 b1pin.pull = Pull.UP
-button1 = Button(b1pin, long_duration_ms=1000)
+button_blue = Button(b1pin, long_duration_ms=1000)
 
 # button 2
 b2pin = DigitalInOut(board.D6)
 b2pin.direction = Direction.INPUT
 b2pin.pull = Pull.UP
-button2 = Button(b2pin, long_duration_ms=1000)
+button_black = Button(b2pin, long_duration_ms=1000)
 
 # button 3
 b3pin = DigitalInOut(board.D9)
 b3pin.direction = Direction.INPUT
 b3pin.pull = Pull.UP
-button3 = Button(b3pin, long_duration_ms=1000)
+button_white = Button(b3pin, long_duration_ms=1000)
+
+class State:
+    def __init__(self):
+        self.main_color_idx = 0
+        self.color_mode_idx = 0
+
+state = State()
 
 def play_sound(fname, loop=False, wait=False):
     try:
@@ -75,43 +89,56 @@ def play_sound(fname, loop=False, wait=False):
         print(e)
         return
 
-def main():
-    main_color = RED
-
-    external_power.value = 1
-    print("play")
-    play_sound("geschwister.wav", loop=False, wait=True)
-    play_sound("erdnussflips.wav", loop=False, wait=True)
-    play_sound("ich-heisse-mara.wav", loop=False, wait=True)
-    play_sound("eltern.wav", loop=False, wait=True)
-    print("play done")
+async def light_and_sounds():
     while True:
-        pixels.fill(BLACK)
-        for k in range(10):
-            i = random.randint(0, NUM_PIXELS-1)
-            x = random.randint(0, 10)
-            if x <= 1:
-                c = random.randint(0, len(COLORS)-1)
-                pixels[i] = COLORS[c]
-            else:
-                pixels[i] = main_color
-        pixels.show()
-        for i in range(10):
-            button1.update()
-            button2.update()
-            button3.update()
-            if button1.short_count == 1:
-                print("button 1 pressed")
-                main_color = RED
-            if button2.short_count == 1:
-                print("button 2 pressed")
-                main_color = GREEN
-            if button3.short_count == 1:
-                print("button 3 pressed")
-                main_color = BLUE
-            time.sleep(0.01)
+        color_mode = COLOR_MODES[state.color_mode_idx]
 
+        if color_mode == "blink":
+            pixels.fill(BLACK)
+            for k in range(10):
+                i = random.randint(0, NUM_PIXELS-1)
+                x = random.randint(0, 10)
+                if x <= 1:
+                    c = random.randint(0, len(COLORS)-1)
+                    pixels[i] = COLORS[c]
+                else:
+                    pixels[i] = MAIN_COLORS[state.main_color_idx]
+            pixels.show()
+            await asyncio.sleep(0.1)
+        elif color_mode == "const":
+            c = MAIN_COLORS[state.main_color_idx]
+            pixels.fill(c)
+            pixels.show()
+            await asyncio.sleep(0.1)
 
+async def handle_events():
+    print("handle events")
+    while True:
+        button_blue.update()
+        button_black.update()
+        button_white.update()
+
+        if button_blue.short_count == 1:
+            print("button blue pressed")
+            state.main_color_idx = (state.main_color_idx + 1) % len(MAIN_COLORS)
+        if button_black.short_count == 1:
+            print("button black pressed")
+            i = random.randint(0, len(SOUNDS)-1)
+            play_sound(SOUNDS[i])
+        if button_white.short_count == 1:
+            print("button white pressed")
+            state.color_mode_idx = (state.color_mode_idx + 1) % len(COLOR_MODES)
+        await asyncio.sleep(0.0)
+
+async def main():
+    external_power.value = 1
+
+    main_tasks = [
+        asyncio.create_task(light_and_sounds()),
+        asyncio.create_task(handle_events()),
+    ]
+
+    await asyncio.gather(*main_tasks)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

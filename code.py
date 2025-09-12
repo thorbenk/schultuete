@@ -6,10 +6,9 @@ from adafruit_debouncer import Button
 from digitalio import DigitalInOut, Direction, Pull
 import neopixel
 import adafruit_lis3dh
-from adafruit_ticks import ticks_ms, ticks_add, ticks_less
-import colorsys
 import time
 import asyncio
+
 
 HIT_THRESHOLD = 120
 SWING_THRESHOLD = 130
@@ -21,7 +20,7 @@ BLUE = (0, 0, 255)
 PURPLE = (125, 0, 255)
 WHITE = (255, 255, 255)
 COLORS = [RED, YELLOW, GREEN, CYAN, BLUE, PURPLE, WHITE]
-BLACK = (0,0,0)
+BLACK = (0, 0, 0)
 
 MAIN_COLORS = [RED, GREEN, BLUE]
 
@@ -69,12 +68,15 @@ b3pin.direction = Direction.INPUT
 b3pin.pull = Pull.UP
 button_white = Button(b3pin, long_duration_ms=1000)
 
+
 class State:
     def __init__(self):
         self.main_color_idx = 0
         self.color_mode_idx = 0
 
+
 state = State()
+
 
 def play_sound(fname, loop=False, wait=False):
     try:
@@ -89,6 +91,7 @@ def play_sound(fname, loop=False, wait=False):
         print(e)
         return
 
+
 async def light_and_sounds():
     while True:
         color_mode = COLOR_MODES[state.color_mode_idx]
@@ -96,10 +99,10 @@ async def light_and_sounds():
         if color_mode == "blink":
             pixels.fill(BLACK)
             for k in range(10):
-                i = random.randint(0, NUM_PIXELS-1)
+                i = random.randint(0, NUM_PIXELS - 1)
                 x = random.randint(0, 10)
                 if x <= 1:
-                    c = random.randint(0, len(COLORS)-1)
+                    c = random.randint(0, len(COLORS) - 1)
                     pixels[i] = COLORS[c]
                 else:
                     pixels[i] = MAIN_COLORS[state.main_color_idx]
@@ -110,6 +113,7 @@ async def light_and_sounds():
             pixels.fill(c)
             pixels.show()
             await asyncio.sleep(0.1)
+
 
 async def handle_events():
     print("handle events")
@@ -123,12 +127,13 @@ async def handle_events():
             state.main_color_idx = (state.main_color_idx + 1) % len(MAIN_COLORS)
         if button_black.short_count == 1:
             print("button black pressed")
-            i = random.randint(0, len(SOUNDS)-1)
+            i = random.randint(0, len(SOUNDS) - 1)
             play_sound(SOUNDS[i])
         if button_white.short_count == 1:
             print("button white pressed")
             state.color_mode_idx = (state.color_mode_idx + 1) % len(COLOR_MODES)
         await asyncio.sleep(0.0)
+
 
 async def main():
     external_power.value = 1
@@ -139,6 +144,7 @@ async def main():
     ]
 
     await asyncio.gather(*main_tasks)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

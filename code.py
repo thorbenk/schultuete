@@ -62,12 +62,15 @@ b3pin.direction = Direction.INPUT
 b3pin.pull = Pull.UP
 button3 = Button(b3pin, long_duration_ms=1000)
 
-def play_sound(fname, loop=False):
+def play_sound(fname, loop=False, wait=False):
     try:
         wave_file = open("sounds/" + fname, "rb")
         wave = audiocore.WaveFile(wave_file)
         audio.stop()
         audio.play(wave, loop=loop)
+        if wait:
+            while audio.playing:
+                time.sleep(0.1)
     except Exception as e:  # noqa: E722
         print(e)
         return
@@ -77,7 +80,10 @@ def main():
 
     external_power.value = 1
     print("play")
-    play_sound("zz_march.wav")
+    play_sound("geschwister.wav", loop=False, wait=True)
+    play_sound("erdnussflips.wav", loop=False, wait=True)
+    play_sound("ich-heisse-mara.wav", loop=False, wait=True)
+    play_sound("eltern.wav", loop=False, wait=True)
     print("play done")
     while True:
         pixels.fill(BLACK)

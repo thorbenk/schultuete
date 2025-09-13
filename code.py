@@ -9,6 +9,7 @@ import adafruit_lis3dh
 import time
 import asyncio
 from adafruit_ticks import ticks_ms, ticks_add, ticks_less
+import audiomp3
 
 
 HIT_THRESHOLD = 120
@@ -25,7 +26,18 @@ BLACK = (0, 0, 0)
 
 MAIN_COLORS = [RED, GREEN, BLUE]
 
-SOUNDS = ["geschwister.wav", "erdnussflips.wav", "ich-heisse-mara.wav", "eltern.wav"]
+SOUNDS = [
+    "apfelmus-l",
+    "eltern",
+    "erdnussflips-j",
+    "erdnussflips",
+    "fahrrad-j",
+    "geschwister",
+    "ich-heisse-mara",
+    "mara-j",
+    "mara-l2",
+    "mara-l",
+]
 
 COLOR_MODES = ["const", "blink"]
 
@@ -81,17 +93,14 @@ state = State()
 
 
 def play_sound(fname, loop=False, wait=False):
-    try:
-        wave_file = open("sounds/" + fname, "rb")
-        wave = audiocore.WaveFile(wave_file)
-        audio.stop()
-        audio.play(wave, loop=loop)
-        if wait:
-            while audio.playing:
-                time.sleep(0.1)
-    except Exception as e:  # noqa: E722
-        print(e)
-        return
+    wave_file = open("sounds/" + fname + ".wav", "rb")
+    wave = audiocore.WaveFile(wave_file)
+    fpath = "sounds/" + fname
+    audio.stop()
+    audio.play(wave)
+    if wait:
+        while audio.playing:
+            time.sleep(0.1)
 
 ANIM_SPEED = 100
 

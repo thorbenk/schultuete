@@ -1,1 +1,8 @@
 adafruit-circuitpython-adafruit_feather_rp2040_prop_maker-en_US-9.2.8.uf2
+sounds/low/*.mp3
+sounds/low/*.wav
+sounds/*.wav
+
+*.kate-swp
+sounds/orig/*
+sounds/wav/*

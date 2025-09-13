@@ -8,6 +8,7 @@ import neopixel
 import adafruit_lis3dh
 import time
 import asyncio
+from adafruit_ticks import ticks_ms, ticks_add, ticks_less
 
 
 HIT_THRESHOLD = 120
@@ -73,6 +74,7 @@ class State:
     def __init__(self):
         self.main_color_idx = 0
         self.color_mode_idx = 0
+        self.tick = ticks_ms()
 
 
 state = State()
@@ -91,28 +93,32 @@ def play_sound(fname, loop=False, wait=False):
         print(e)
         return
 
+ANIM_SPEED = 100
 
 async def light_and_sounds():
     while True:
         color_mode = COLOR_MODES[state.color_mode_idx]
 
-        if color_mode == "blink":
-            pixels.fill(BLACK)
-            for k in range(10):
-                i = random.randint(0, NUM_PIXELS - 1)
-                x = random.randint(0, 10)
-                if x <= 1:
-                    c = random.randint(0, len(COLORS) - 1)
-                    pixels[i] = COLORS[c]
-                else:
-                    pixels[i] = MAIN_COLORS[state.main_color_idx]
-            pixels.show()
-            await asyncio.sleep(0.1)
-        elif color_mode == "const":
-            c = MAIN_COLORS[state.main_color_idx]
-            pixels.fill(c)
-            pixels.show()
-            await asyncio.sleep(0.1)
+        if not ticks_less(ticks_ms(), state.tick):
+            if color_mode == "blink":
+                pixels.fill(BLACK)
+                for k in range(10):
+                    i = random.randint(0, NUM_PIXELS - 1)
+                    x = random.randint(0, 10)
+                    if x <= 1:
+                        c = random.randint(0, len(COLORS) - 1)
+                        pixels[i] = COLORS[c]
+                    else:
+                        pixels[i] = MAIN_COLORS[state.main_color_idx]
+                pixels.show()
+                state.tick = ticks_add(ticks_ms(), ANIM_SPEED)
+            elif color_mode == "const":
+                c = MAIN_COLORS[state.main_color_idx]
+                pixels.fill(c)
+                pixels.show()
+            else:
+                pass
+        await asyncio.sleep(0.01)
 
 
 async def handle_events():

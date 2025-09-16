@@ -397,7 +397,7 @@ async def main():
     main_tasks = [
         asyncio.create_task(light_animations()),
         asyncio.create_task(handle_events()),
-        asyncio.create_task(monitor_accelerometer()),
+        # asyncio.create_task(monitor_accelerometer()),
     ]
 
     await asyncio.gather(*main_tasks)

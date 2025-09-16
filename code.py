@@ -11,7 +11,6 @@ import asyncio
 from adafruit_ticks import ticks_ms, ticks_add, ticks_less
 import audiomp3
 
-# LED Animation imports
 from adafruit_led_animation.animation.blink import Blink
 from adafruit_led_animation.animation.chase import Chase
 from adafruit_led_animation.animation.comet import Comet
@@ -26,15 +25,21 @@ import adafruit_led_animation.color as anim_color
 HIT_THRESHOLD = 120
 SWING_THRESHOLD = 130
 
-# Define colors using animation library format
 ANIM_COLORS = [
+    anim_color.PURPLE,
     anim_color.RED,
     anim_color.GREEN,
     anim_color.BLUE,
-    anim_color.PURPLE,
     anim_color.CYAN,
     anim_color.YELLOW,
-    anim_color.WHITE
+]
+ANIM_COLOR_NAMES = [
+    "PURPLE",
+    "RED",
+    "GREEN",
+    "BLUE",
+    "CYAN",
+    "YELLOW",
 ]
 
 VIOLET = (200, 60, 150)
@@ -54,19 +59,20 @@ SOUNDS = [
     "mara-l",
 ]
 
-# Animation modes
 ANIMATION_MODES = [
+    "pulse",
+    "sparkle",
     "solid",
     "blink",
-    "pulse",
     "comet",
     "chase",
     "rainbow",
-    "sparkle",
     "rainbow_chase",
     "rainbow_comet",
-    "custom_sparkle"  # Our custom non-blocking sparkle
+    "custom_sparkle"
 ]
+
+BRIGHTNESSES = [0.1, 0.2, 0.3, 0.4]
 
 # enable external power pin
 external_power = DigitalInOut(board.EXTERNAL_POWER)
@@ -79,7 +85,6 @@ NUM_PIXELS = 50
 pixels = neopixel.NeoPixel(
     board.EXTERNAL_NEOPIXELS, NUM_PIXELS, auto_write=False, pixel_order="GRB"
 )
-pixels.brightness = 0.1
 
 # onboard LIS3DH
 i2c = board.I2C()
@@ -168,6 +173,7 @@ class State:
     def __init__(self):
         self.main_color_idx = 0
         self.animation_mode_idx = 0
+        self.brightness_idx = 0
         self.current_animation = None
         self.special_effect = None
         self.special_effect_end_time = 0
@@ -229,6 +235,9 @@ class State:
         mode_name = ANIMATION_MODES[self.animation_mode_idx]
         self.current_animation = self.animations[mode_name]
 
+        # make sure a redraw is triggered
+        self.current_animation.last_update = 0
+
     def next_animation_mode(self):
         """Switch to next animation mode"""
         self.animation_mode_idx = (self.animation_mode_idx + 1) % len(ANIMATION_MODES)
@@ -240,8 +249,7 @@ class State:
         """Switch to next color and update animations"""
         self.main_color_idx = (self.main_color_idx + 1) % len(ANIM_COLORS)
         self.update_color()
-        color_names = ["RED", "GREEN", "BLUE", "PURPLE", "CYAN", "YELLOW", "WHITE"]
-        color_name = color_names[self.main_color_idx % len(color_names)]
+        color_name = ANIM_COLOR_NAMES[self.main_color_idx % len(color_names)]
         print(f"Switched to color: {color_name}")
 
     def trigger_special_effect(self, duration_ms=1500):
@@ -294,9 +302,6 @@ async def light_animations():
         if lis3dh.tapped:
             print("Hit detected!")
             state.trigger_special_effect()
-            # Play a random sound on hit
-            sound_idx = random.randint(0, len(SOUNDS) - 1)
-            play_sound(SOUNDS[sound_idx])
 
         await asyncio.sleep(0.01)  # Small delay to prevent overwhelming the CPU
 
@@ -313,12 +318,10 @@ async def handle_events():
             print("Blue button pressed - changing color")
             state.next_color()
 
-        """
         if button_blue.long_press:
-            print("Blue button long press - rainbow mode")
-            state.animation_mode_idx = ANIMATION_MODES.index("rainbow")
-            state.current_animation = state.animations["rainbow"]
-        """
+            state.brightness_idx = (state.brightness_idx + 1) % len(BRIGHTNESSES)
+            pixels.brightness = BRIGHTNESSES[state.brightness_idx]
+            print(f"Blue button long press - new brightness {new_b}")
 
         if button_black.short_count == 1:
             print("Black button pressed - playing sound")
@@ -371,6 +374,7 @@ async def monitor_accelerometer():
 
 
 async def main():
+    pixels.brightness = BRIGHTNESSES[state.brightness_idx]
     external_power.value = 1
 
     print("Schultuete starting up...")

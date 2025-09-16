@@ -309,33 +309,39 @@ async def handle_events():
         button_black.update()
         button_white.update()
 
-        if button_blue.short_count == 1:
+        if button_blue.short_count:
             print("Blue button pressed - changing color")
             state.next_color()
 
-        if button_blue.long_count == 1:
+        """
+        if button_blue.long_press:
             print("Blue button long press - rainbow mode")
             state.animation_mode_idx = ANIMATION_MODES.index("rainbow")
             state.current_animation = state.animations["rainbow"]
+        """
 
         if button_black.short_count == 1:
             print("Black button pressed - playing sound")
             sound_idx = random.randint(0, len(SOUNDS) - 1)
             play_sound(SOUNDS[sound_idx])
 
-        if button_black.long_count == 1:
+        """
+        if button_black.long_press:
             print("Black button long press - custom sparkle mode")
             state.animation_mode_idx = ANIMATION_MODES.index("custom_sparkle")
             state.current_animation = state.animations["custom_sparkle"]
+        """
 
         if button_white.short_count == 1:
             print("White button pressed - changing animation")
             state.next_animation_mode()
 
-        if button_white.long_count == 1:
+        """
+        if button_white.long_press:
             print("White button long press - comet mode")
             state.animation_mode_idx = ANIMATION_MODES.index("comet")
             state.current_animation = state.animations["comet"]
+        """
 
         await asyncio.sleep(0.01)
 

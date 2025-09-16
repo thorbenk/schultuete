@@ -63,13 +63,13 @@ ANIMATION_MODES = [
     "custom_sparkle",
     "pulse",
     "sparkle",
-    "solid",
-    "blink",
-    "comet",
-    "chase",
+    # "blink",
+    # "comet",
+    # "chase",
     "rainbow",
     "rainbow_chase",
     "rainbow_comet",
+    "solid",
 ]
 
 BRIGHTNESSES = [0.1, 0.3, 0.5, 0.7]
@@ -126,6 +126,9 @@ class NonBlockingAnimation:
             self.animation.animate()
             self.last_update = now
 
+    def resume(self):
+        self.animation.resume()
+
 
 class CustomSparkle:
     """Custom non-blocking sparkle animation"""
@@ -142,6 +145,9 @@ class CustomSparkle:
         if ticks_less(ticks_add(self.last_update, self.update_interval_ms), now):
             self._animate()
             self.last_update = now
+
+    def resume(self):
+        pass
 
     def _animate(self):
         # Clear all pixels
@@ -205,7 +211,7 @@ class State:
                 Rainbow(pixels, speed=speed, period=2), 50
             ),
             "sparkle": NonBlockingAnimation(
-                Sparkle(pixels, speed=speed, color=current_color, num_sparkles=10), 50
+                Sparkle(pixels, speed=0.05, color=current_color, num_sparkles=25), 50
             ),
             "rainbow_chase": NonBlockingAnimation(
                 RainbowChase(pixels, speed=speed, size=3, spacing=2, step=8), 50
@@ -237,6 +243,7 @@ class State:
 
         # make sure a redraw is triggered
         self.current_animation.last_update = 0
+        self.current_animation.resume()
 
     def next_animation_mode(self):
         """Switch to next animation mode"""

@@ -47,15 +47,15 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 SOUNDS = [
+    "ich-heisse-mara",
     "apfelmus-l",
     "eltern",
-    "erdnussflips-j",
     "erdnussflips",
-    "fahrrad-j",
-    "geschwister",
-    "ich-heisse-mara",
     "mara-j",
+    "geschwister",
+    "fahrrad-j",
     "mara-l2",
+    "erdnussflips-j",
     "mara-l",
 ]
 
@@ -180,6 +180,7 @@ class State:
         self.main_color_idx = 0
         self.animation_mode_idx = 0
         self.brightness_idx = 0
+        self.sound_idx = 0
         self.current_animation = None
         self.special_effect = None
         self.special_effect_end_time = 0
@@ -333,8 +334,9 @@ async def handle_events():
 
         if button_black.short_count == 1:
             print("Black button pressed - playing sound")
-            sound_idx = random.randint(0, len(SOUNDS) - 1)
-            play_sound(SOUNDS[sound_idx])
+            play_sound(SOUNDS[state.sound_idx])
+            sound_idx = (state.sound_idx + 1) % len(SOUNDS)
+            state.sound_idx = sound_idx
 
         """
         if button_black.long_press:

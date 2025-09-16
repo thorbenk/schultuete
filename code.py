@@ -60,6 +60,7 @@ SOUNDS = [
 ]
 
 ANIMATION_MODES = [
+    "custom_sparkle",
     "pulse",
     "sparkle",
     "solid",
@@ -69,10 +70,9 @@ ANIMATION_MODES = [
     "rainbow",
     "rainbow_chase",
     "rainbow_comet",
-    "custom_sparkle"
 ]
 
-BRIGHTNESSES = [0.1, 0.2, 0.3, 0.4]
+BRIGHTNESSES = [0.1, 0.3, 0.5, 0.7]
 
 # enable external power pin
 external_power = DigitalInOut(board.EXTERNAL_POWER)
@@ -129,7 +129,7 @@ class NonBlockingAnimation:
 
 class CustomSparkle:
     """Custom non-blocking sparkle animation"""
-    def __init__(self, pixels, color, num_sparkles=10, update_interval_ms=100):
+    def __init__(self, pixels, color, num_sparkles=25, update_interval_ms=150):
         self.pixels = pixels
         self.color = color
         self.num_sparkles = num_sparkles
@@ -249,7 +249,7 @@ class State:
         """Switch to next color and update animations"""
         self.main_color_idx = (self.main_color_idx + 1) % len(ANIM_COLORS)
         self.update_color()
-        color_name = ANIM_COLOR_NAMES[self.main_color_idx % len(color_names)]
+        color_name = ANIM_COLOR_NAMES[self.main_color_idx % len(ANIM_COLOR_NAMES)]
         print(f"Switched to color: {color_name}")
 
     def trigger_special_effect(self, duration_ms=1500):
@@ -320,7 +320,8 @@ async def handle_events():
 
         if button_blue.long_press:
             state.brightness_idx = (state.brightness_idx + 1) % len(BRIGHTNESSES)
-            pixels.brightness = BRIGHTNESSES[state.brightness_idx]
+            new_b = BRIGHTNESSES[state.brightness_idx]
+            pixels.brightness = new_b
             print(f"Blue button long press - new brightness {new_b}")
 
         if button_black.short_count == 1:
@@ -380,19 +381,10 @@ async def main():
     print("Schultuete starting up...")
     print(f"Available animations: {', '.join(ANIMATION_MODES)}")
     print("Controls:")
-    print("- Blue button: Change color (long press: rainbow)")
-    print("- Black button: Play sound (long press: custom sparkle)")
-    print("- White button: Change animation (long press: comet)")
-    print("- Tap/shake: Special effects + sounds")
-
-    # Start with a welcome effect
-    welcome_effect = CustomSparkle(pixels, VIOLET, num_sparkles=20, update_interval_ms=50)
-    start_time = ticks_ms()
-    while ticks_less(ticks_ms(), ticks_add(start_time, 3000)):  # 3 second welcome
-        welcome_effect.update()
-        await asyncio.sleep(0.01)
-
-    print("Welcome sequence complete - starting main program")
+    print("- Blue button: Change color (long press: brightness)")
+    print("- Black button: Play sound")
+    print("- White button: Change animation")
+    print("- Tap/shake: Special effect")
 
     # Start main tasks
     main_tasks = [
